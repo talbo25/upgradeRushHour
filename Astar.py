@@ -269,7 +269,7 @@ class Astar:
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h_down += 1
-                    h += h_up if h_up > h_down else h_down
+                    h += h_up if h_up < h_down else h_down
 
         return h
 
