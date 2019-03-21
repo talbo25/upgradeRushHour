@@ -18,8 +18,10 @@ class IDAstar:
 
         self.d = dict()
         self.Open_dic = dict()
+        self.Close_dic = dict()
         self.state_id = 1
         self.Open = []
+        self.Close = []
         self.bound = 0
 
     def open_push(self, node):
@@ -33,62 +35,78 @@ class IDAstar:
 
         return v[1]
 
-    def remove_node(self, l, value):
-        n = len(l)
-        # Open heap:
+    def close_push(self, node):
+        key = node.F
+        push(self.Close, (key, node))
 
-        for i in range(0, n):
-            if (l[i][1].name == value):
-                l.pop(i)
+    def remove_node(self, l, value):
+        for i in l:
+            if i.name == value:
+                l.remove(i)
                 return
 
-    def solve(self, max_time, _heuristic, DB):
+    def searchB(self, _heuristic, _flag, _start_time, _DB):
+        minn = math.inf
 
+        while self.Open:
+            curr_node = self.Open.pop()
+            res = _DB.get_next(curr_node.state)
+            if isinstance(res, str):
+                while True:
+                    self.Close.append(curr_node)
+                    self.Close_dic.update({curr_node.name: curr_node.F})
+                    self.expand_from_DB(curr_node, _heuristic, res)
+                    curr_node = self.Open.pop()
+                    res = _DB.get_next(curr_node.state)
+                    if res == 1:
+                        _flag = 1
+                        break
+
+            f = curr_node.F
+            if f > self.bound:
+                deeper_search_result = f
+            elif curr_node.state.final_move():
+                end = time()
+                t = end - _start_time
+                result = [self.printSolutionHeap(curr_node, _DB, _flag), curr_node.depth + 1, t]
+                return result
+            else:
+                minn = math.inf
+                self.expand(curr_node, _heuristic)
+                continue
+
+            if isinstance(deeper_search_result, str):
+                return deeper_search_result
+            if deeper_search_result < minn:
+                minn = deeper_search_result
+            self.Close.append(curr_node)
+            self.Close_dic.update({curr_node.name: curr_node.F})
+
+        return minn
+
+    def ida_star(self, max_time, _heuristic, _DB):
         if _heuristic == 1:
             self.first_node.F = self.heuristic1(self.first_node.state)
         else:
             self.first_node.F = self.heuristic2(self.first_node.state)
 
         self.bound = self.first_node.F
+        count = 1
         start = time()
-        # flag = 0
-        # insert beginning of puzzle to Open
-        self.open_push(self.first_node)
-        self.Open_dic.update({self.first_node.name: self.first_node.F})
-
-        while (self.Open) and (time()-start < max_time):
-            curr_node = self.open_pop()
-            # res = DB.get_next(curr_node.state)
-            if
-            # if res == 0:
-            #     continue
-            # if res != 1:
-            #     while True:
-            #         self.expand_from_DB(curr_node, _heuristic, res)
-            #         curr_node = self.open_pop()
-            #         res = DB.get_next(curr_node.state)
-            #         if res == 1:
-            #             flag = 1
-            #             break
-
-            # check if solved
-            # if (flag == 1) or (curr_node.state.final_move()):
-            if curr_node.state.final_move():
-                # DONE:
-                end = time()
-                t = end - start
-                result = [self.printSolutionHeap(curr_node, DB, flag), curr_node.depth + 1, t]
-                return result
-
-            # Expand node
-            self.expand(curr_node, _heuristic)
-
-        if not self.Open:
-            print("Open empty; solution not found")
-
-        result = None
-
-        return result
+        while 1:
+            print("iteration" + str(count))
+            count += 1
+            self.Open.append(self.first_node)
+            # upper_search_result = search(self.first_node, _heuristic, 0, start)
+            upper_search_result = self.searchB(_heuristic, 0, start, _DB)
+            if isinstance(upper_search_result, str):
+                return upper_search_result
+            if upper_search_result == math.inf:
+                return "NOT_FOUND"
+            self.bound = upper_search_result
+            self.Open_dic.clear()
+            self.Close_dic.clear()
+            self.Close = []
 
     def expand(self, node, _heuristic):
         moves = node.moves
@@ -112,39 +130,24 @@ class IDAstar:
 
             f = h + depth + 1
 
-            if s not in self.Open_dic:
-                next_node = Node(next_state, depth + 1)
-                next_node.F = f
-                next_node.parent = node
-                next_node.previous_move = moves[i]
+            next_node = Node(next_state, depth + 1)
+            next_node.F = f
+            next_node.parent = node
+            next_node.previous_move = moves[i]
 
-                self.open_push(next_node)
-                self.Open_dic.update({s: f})
-
-
-            # CASE 2: next_state in OPEN and our value is better
-            else:
+            if s in self.Open_dic:
                 other_F = self.Open_dic.get(s)
                 if other_F > f:
-                    # DO: Repalce previous state with this state
+                    self.remove_node(self.Open, s)
 
-                    # Create child node
-                    next_node = Node(next_state, depth + 1)
-                    next_node.F = f
-                    next_node.parent = node
-                    next_node.previous_move = moves[i]
+            elif s in self.Close_dic:
+                other_F = self.Close_dic.get(s)
+                if other_F > f:
+                    self.remove_node(self.Close, s)
+                    self.Close_dic.pop(s)
 
-                    # Replace nodes
-                    self. (self.Open, s)
-                    self.open_push(next_node)
-
-                    # update dic
-                    self.Open_dic.update({s: f})
-
-            if next_node.F > self.bound:
-                self.bound = next_node.F
-                self.remove_node(self.Open, s)
-
+            self.Open.append(next_node)
+            self.Open_dic.update({s: f})
 
         return True
 
@@ -171,7 +174,7 @@ class IDAstar:
             next_node.parent = node
             next_node.previous_move = s + _command
 
-            self.open_push(next_node)
+            self.Open.append(next_node)
             self.Open_dic.update({s: f})
 
         return True
@@ -189,14 +192,15 @@ class IDAstar:
 
         return h
 
-    def heuristic2(self, _state):  # this heuristic returns the number of blocked squares for the red car + blocking car sizes
+    def heuristic2(self,
+                   _state):  # this heuristic returns the number of blocked squares for the red car + blocking car sizes
         h = 0
 
         vehicle = _state.get_board().get_vehicle('X')
         start_point = vehicle.top_left + vehicle.get_length()
         steps_to_end = 6 - ((vehicle.top_left + vehicle.get_length()) % 6)
 
-        for i in range(0, steps_to_end+1):
+        for i in range(0, steps_to_end + 1):
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
@@ -209,14 +213,14 @@ class IDAstar:
         vehicle = _state.get_board().get_vehicle('X')
         start_point = vehicle.top_left + vehicle.get_length()
         steps_to_end = 6 - (start_point % 6)
-        for i in range(0, steps_to_end+1):
+        for i in range(0, steps_to_end + 1):
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
                 vehicle_len = blocking_vehicle.get_legth()
-                if vehicle_len == 3:   # truck down
-                    h += 5 - (blocking_vehicle.bottom_right/6)
-                else:                   # car up
+                if vehicle_len == 3:  # truck down
+                    h += 5 - (blocking_vehicle.bottom_right / 6)
+                else:  # car up
                     h += blocking_vehicle.top_left / 6
 
         return h
@@ -226,25 +230,25 @@ class IDAstar:
         vehicle = _state.get_board().get_vehicle('X')
         start_point = vehicle.top_left + vehicle.get_length()
         steps_to_end = 6 - (start_point % 6)
-        for i in range(0, steps_to_end+1):
+        for i in range(0, steps_to_end + 1):
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
                 vehicle_len = blocking_vehicle.get_legth()
-                if vehicle_len == 3:   # truck down
-                    h += 5 - (blocking_vehicle.bottom_right/6)
+                if vehicle_len == 3:  # truck down
+                    h += 5 - (blocking_vehicle.bottom_right / 6)
                     for j in range(blocking_vehicle.bottom_right + 6, 36, 6):
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h += 1
-                else:                   # car up/down
+                else:  # car up/down
                     h_up = 5 - (blocking_vehicle.bottom_right / 6)
-                    for j in range(blocking_vehicle.bottom_right + 6, 36, 6):    # check down
+                    for j in range(blocking_vehicle.bottom_right + 6, 36, 6):  # check down
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h_up += 1
                     h_down = blocking_vehicle.top_left / 6
-                    for j in range(blocking_vehicle.top_left - 6, -1, -6):    # check up
+                    for j in range(blocking_vehicle.top_left - 6, -1, -6):  # check up
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h_down += 1
@@ -310,12 +314,103 @@ class IDAstar:
 
         return "XR" + str(steps_to_end + 1)
 
+    """
+            def search(curr_node, _heuristic, _flag, _start_time):
+
+            f = curr_node.F
+            if f > self.bound:
+                return f
+            if curr_node.state.final_move():
+                end = time()
+                t = end - _start_time
+                result = [self.printSolutionHeap(curr_node, _DB, _flag), curr_node.depth + 1, t]
+                return result
+            minn = math.inf
+
+            self.expand(curr_node, _heuristic)
+            while self.Open:
+                curr_node = self.Open.pop()
+                res = _DB.get_next(curr_node.state)
+                if isinstance(res, str):
+                    while True:
+                        self.Close.append(curr_node)
+                        self.Close_dic.update({curr_node.name: curr_node.F})
+                        self.expand_from_DB(curr_node, _heuristic, res)
+                        curr_node = self.Open.pop()
+                        res = _DB.get_next(curr_node.state)
+                        if res == 1:
+                            _flag = 1
+                            break
+
+                deeper_search_result = search(curr_node, _heuristic, _flag, _start_time)
+                if isinstance(deeper_search_result, str):
+                    return deeper_search_result
+                if deeper_search_result < minn:
+                    minn = deeper_search_result
+                self.Close.append(curr_node)
+                self.Close_dic.update({curr_node.name: curr_node.F})
+            return minn
+
+        def solve(self, max_time, _heuristic, DB):
+
+            if _heuristic == 1:
+                self.first_node.F = self.heuristic1(self.first_node.state)
+            else:
+                self.first_node.F = self.heuristic2(self.first_node.state)
+
+            self.bound = self.first_node.F
+            start = time()
+            flag = 0
+            # insert beginning of puzzle to Open
+            self.open_push(self.first_node)
+            self.Open_dic.update({self.first_node.name: self.first_node.F})
+            next_bound = math.inf
+
+            while self.Open and (time() - start < max_time):
+                curr_node = self.open_pop()
+                res = DB.get_next(curr_node.state)
+                if res == 0:
+                    continue
+                if res != 1:
+                    while True:
+                        self.expand_from_DB(curr_node, _heuristic, res)
+                        curr_node = self.open_pop()
+                        res = DB.get_next(curr_node.state)
+                        if res == 1:
+                            flag = 1
+                            break
+
+                # check if solved
+                # if (flag == 1) or (curr_node.state.final_move()):
+                if curr_node.state.final_move():
+                    # DONE:
+                    end = time()
+                    t = end - start
+                    result = [self.printSolutionHeap(curr_node, DB, flag), curr_node.depth + 1, t]
+                    return result
+
+                if curr_node.F > self.bound:
+                    if curr_node.F < next_bound:
+                        next_bound = curr_node.F
+                else:
+                    self.expand(curr_node, _heuristic)
+
+                # # Expand node
+                # self.expand(curr_node, _heuristic)
+
+            if not self.Open:
+                print("Open empty; solution not found")
+
+            result = None
+
+            return result
+    """
+
 
 class Node:
 
     # Build node
     def __init__(self, _state, _depth):
-
         self.state = _state
         self.name = _state.get_string_board()
         self.moves = self.state.find_next_steps()
