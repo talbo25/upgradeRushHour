@@ -84,7 +84,7 @@ class IDAstar:
 
         return minn
 
-    def ida_star(self, max_time, _heuristic, _DB):
+    def solve(self, max_time, _heuristic, _DB):
         self.BigOpen = []
         if _heuristic == 1:
             self.first_node.F = self.heuristic1(self.first_node.state)
