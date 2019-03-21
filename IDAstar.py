@@ -23,6 +23,7 @@ class IDAstar:
         self.Open = []
         self.Close = []
         self.bound = 0
+        self.BigOpen = []
 
     def open_push(self, node):
         key = node.F
@@ -71,7 +72,6 @@ class IDAstar:
                 result = [self.printSolutionHeap(curr_node, _DB, _flag), curr_node.depth + 1, t]
                 return result
             else:
-                minn = math.inf
                 self.expand(curr_node, _heuristic)
                 continue
 
@@ -85,29 +85,31 @@ class IDAstar:
         return minn
 
     def ida_star(self, max_time, _heuristic, _DB):
+        self.BigOpen = []
         if _heuristic == 1:
             self.first_node.F = self.heuristic1(self.first_node.state)
         else:
             self.first_node.F = self.heuristic2(self.first_node.state)
 
         self.bound = self.first_node.F
+        self.BigOpen.append(self.first_node)
         count = 1
         start = time()
-        while 1:
+        while time()- start < max_time:
             print("iteration" + str(count))
             count += 1
-            self.Open.append(self.first_node)
+            self.Open.extend(self.BigOpen)
             # upper_search_result = search(self.first_node, _heuristic, 0, start)
             upper_search_result = self.searchB(_heuristic, 0, start, _DB)
-            if isinstance(upper_search_result, str):
+            if isinstance(upper_search_result, list):
                 return upper_search_result
             if upper_search_result == math.inf:
-                return "NOT_FOUND"
+                return None
             self.bound = upper_search_result
-            self.Open_dic.clear()
+            # self.Open_dic.clear()
             self.Close_dic.clear()
             self.Close = []
-
+        return None
     def expand(self, node, _heuristic):
         moves = node.moves
         n = len(moves)
@@ -135,10 +137,12 @@ class IDAstar:
             next_node.parent = node
             next_node.previous_move = moves[i]
 
-            if s in self.Open_dic:
+            if (s in self.Open_dic) and (s not in self.Close_dic):
                 other_F = self.Open_dic.get(s)
                 if other_F > f:
                     self.remove_node(self.Open, s)
+                else:
+                    continue
 
             elif s in self.Close_dic:
                 other_F = self.Close_dic.get(s)
@@ -146,6 +150,7 @@ class IDAstar:
                     self.remove_node(self.Close, s)
                     self.Close_dic.pop(s)
 
+            self.BigOpen.append(next_node)
             self.Open.append(next_node)
             self.Open_dic.update({s: f})
 

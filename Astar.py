@@ -121,7 +121,7 @@ class Astar:
 
             f = h + depth + 1
 
-            # CASE 1 : new state is neither in OPEN nor in CLOSE"""
+            # CASE 1 : new state is neither in OPEN nor in CLOSE
             if (s not in self.Open_dic) and (s not in self.Close_dic):
                 next_node = Node(next_state, depth + 1)
                 next_node.F = f
