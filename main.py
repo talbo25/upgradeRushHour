@@ -45,19 +45,19 @@ def RUN(_time, _heuristic):
                       "Solution path - ", solution_path, "\n"
                       "==========================================")
 
-                # total_time += current_time
+                total_time += current_time
                 count += 1
                 total_steps += steps
             i += 1
             puzzle = fh.readline()
         fh.close()
 
-    # print("==========================================\n"
-    #       "SUMMARY\n"
-    #       "Solved ", count, " out of ", i - 1, " puzzles with heuristic number ", _heuristic, " with time limit of  ",_time, "\n"
-    #       "Total time - ", total_time, "\n"
-    #        "Average time for one puzzle - ", total_time / count, "\n"
-    #        "Average steps for one puzzle - ", total_steps / count, "\n")
+    print("==========================================\n"
+          "SUMMARY\n"
+          "Solved ", count, " out of ", i - 1, " puzzles with heuristic number ", _heuristic, " with time limit of  ",_time, "\n"
+          "Total time - ", total_time, "\n"
+           "Average time for one puzzle - ", total_time / count, "\n"
+           "Average steps for one puzzle - ", total_steps / count, "\n")
 
 
-RUN(30, 4)
+RUN(200, 2)

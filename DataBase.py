@@ -27,6 +27,7 @@ class DataBase:
         e_state = encode_board(_state)
         if e_state not in self.Encoded_States:
             self.add(e_state)
+            _state.e_version = e_state
             return 1
 
         if self.Encoded_States[e_state] == 0:

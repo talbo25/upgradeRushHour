@@ -6,6 +6,7 @@ from utils import string_modify, string_switch
 class State:
     def __init__(self, _board_obj):
         self.board_state = _board_obj
+        self.e_version = None
 
     def get_string_board(self):
         return self.board_state.get_board()
@@ -108,6 +109,98 @@ class State:
                 j += side
 
         return next_states
+
+    def get_new_blocked(self, _parent_state, _command):
+        vehicle = _command[-3]
+        com_direction = _command[-2]
+        steps = int(_command[-1])
+        v_direction = self.get_board().get_vehicle(vehicle).direction
+        s_board = self.get_string_board()
+
+        if (com_direction == 'R') or (com_direction == 'D'):  # bottom-right new index
+            start_index = self.get_board().get_vehicle(vehicle).bottom_right
+        else:  # top-left new index
+            start_index = self.get_board().get_vehicle(vehicle).top_left
+
+        counter = 0
+
+        if v_direction == 'H':
+            run = start_index
+            # check left
+            while run % 6 != 5:
+                if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                    if self.get_board().get_vehicle(s_board[run]).direction == 'H':
+                        counter += 1
+                    break
+                run -= 1
+
+            run = start_index
+            # check right
+            while run % 6 != 0:
+                if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                    if self.get_board().get_vehicle(s_board[run]).direction == 'H':
+                        counter += 1
+                    break
+                run += 1
+        else:
+            run = start_index
+            # check up
+            while run >= 0:
+                if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                    if self.get_board().get_vehicle(s_board[run]).direction == 'V':
+                        counter += 1
+                    break
+                run -= 6
+
+            run = start_index
+            # check down
+            while run < 36:
+                if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                    if self.get_board().get_vehicle(s_board[run]).direction == 'V':
+                        counter += 1
+                    break
+                run += 6
+
+        while steps > 0:
+            if v_direction == 'H':
+                run = start_index
+                # check up
+                while run >= 0:
+                    if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                        if self.get_board().get_vehicle(s_board[run]).direction == 'V':
+                            counter += 1
+                        break
+                    run -= 6
+
+                run = start_index
+                # check down
+                while run < 36:
+                    if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                        if self.get_board().get_vehicle(s_board[run]).direction == 'V':
+                            counter += 1
+                        break
+                    run += 6
+            else:
+                run = start_index
+                # check left
+                while run % 6 != 5:
+                    if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                        if self.get_board().get_vehicle(s_board[run]).direction == 'H':
+                            counter += 1
+                        break
+                    run -= 1
+
+                run = start_index
+                # check right
+                while run % 6 != 0:
+                    if (s_board[run] != '.') and (s_board[run] != vehicle):  # found
+                        if self.get_board().get_vehicle(s_board[run]).direction == 'H':
+                            counter += 1
+                        break
+                    run += 1
+            steps -= 1
+
+        return counter
 
     def final_move(self):
         vehicle = self.board_state.get_vehicle('X')

@@ -5,6 +5,7 @@ from heapq import heappush as push
 import math
 import copy
 from time import time
+from utils import *
 
 
 class Astar:
@@ -60,7 +61,7 @@ class Astar:
         self.open_push(self.first_node)
         self.Open_dic.update({self.first_node.name: self.first_node.F})
 
-        while (self.Open) and (time()-start < max_time):
+        while self.Open and (time() - start < max_time):
             curr_node = self.open_pop()
             res = DB.get_next(curr_node.state)
             if res == 0:
@@ -75,6 +76,10 @@ class Astar:
                     if res == 1:
                         flag = 1
                         break
+
+            if curr_node.parent:
+                curr_node.freedom_level_change = len(curr_node.moves) - len(curr_node.parent.moves)
+                curr_node.new_blocked = curr_node.state.get_new_blocked(curr_node.parent, curr_node.previous_move[-3:])
 
             # check if solved
             if (flag == 1) or (curr_node.state.final_move()):
@@ -127,6 +132,7 @@ class Astar:
                 next_node.F = f
                 next_node.parent = node
                 next_node.previous_move = moves[i]
+                # next_node.freedom_level_change = len(next_node.moves) - len(node.moves)
 
                 self.open_push(next_node)
                 self.Open_dic.update({s: f})
@@ -143,6 +149,7 @@ class Astar:
                     next_node.F = f
                     next_node.parent = node
                     next_node.previous_move = moves[i]
+                    # next_node.freedom_level_change = len(next_node.moves) - len(node.moves)
 
                     # Replace nodes
                     self.remove_node(self.Open, s)
@@ -160,6 +167,7 @@ class Astar:
                     next_node.F = f
                     next_node.parent = node
                     next_node.previous_move = moves[i]
+                    # next_node.freedom_level_change = len(next_node.moves) - len(node.moves)
 
                     self.remove_node(self.Close, s)
                     self.open_push(next_node)
@@ -210,14 +218,15 @@ class Astar:
 
         return h
 
-    def heuristic2(self, _state):  # this heuristic returns the number of blocked squares for the red car + blocking car sizes
+    def heuristic2(self,
+                   _state):  # this heuristic returns the number of blocked squares for the red car + blocking car sizes
         h = 0
 
         vehicle = _state.get_board().get_vehicle('X')
         start_point = vehicle.top_left + vehicle.get_length()
         steps_to_end = 6 - ((vehicle.top_left + vehicle.get_length()) % 6)
 
-        for i in range(0, steps_to_end+1):
+        for i in range(0, steps_to_end + 1):
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
@@ -230,14 +239,14 @@ class Astar:
         vehicle = _state.get_board().get_vehicle('X')
         start_point = vehicle.top_left + vehicle.get_length()
         steps_to_end = 6 - (start_point % 6)
-        for i in range(0, steps_to_end+1):
+        for i in range(0, steps_to_end + 1):
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
                 vehicle_len = blocking_vehicle.get_legth()
-                if vehicle_len == 3:   # truck down
-                    h += 5 - (blocking_vehicle.bottom_right/6)
-                else:                   # car up
+                if vehicle_len == 3:  # truck down
+                    h += 5 - (blocking_vehicle.bottom_right / 6)
+                else:  # car up
                     h += blocking_vehicle.top_left / 6
 
         return h
@@ -247,25 +256,25 @@ class Astar:
         vehicle = _state.get_board().get_vehicle('X')
         start_point = vehicle.top_left + vehicle.get_length()
         steps_to_end = 6 - (start_point % 6)
-        for i in range(0, steps_to_end+1):
+        for i in range(0, steps_to_end + 1):
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
                 vehicle_len = blocking_vehicle.get_legth()
-                if vehicle_len == 3:   # truck down
-                    h += 5 - (blocking_vehicle.bottom_right/6)
+                if vehicle_len == 3:  # truck down
+                    h += 5 - (blocking_vehicle.bottom_right / 6)
                     for j in range(blocking_vehicle.bottom_right + 6, 36, 6):
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h += 1
-                else:                   # car up/down
+                else:  # car up/down
                     h_up = 5 - (blocking_vehicle.bottom_right / 6)
-                    for j in range(blocking_vehicle.bottom_right + 6, 36, 6):    # check down
+                    for j in range(blocking_vehicle.bottom_right + 6, 36, 6):  # check down
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h_up += 1
                     h_down = blocking_vehicle.top_left / 6
-                    for j in range(blocking_vehicle.top_left - 6, -1, -6):    # check up
+                    for j in range(blocking_vehicle.top_left - 6, -1, -6):  # check up
                         c2 = _state.get_string_board()[j]
                         if c2 != '.':
                             h_down += 1
@@ -332,11 +341,11 @@ class Astar:
         return "XR" + str(steps_to_end + 1)
 
 
+
 class Node:
 
     # Build node
     def __init__(self, _state, _depth):
-
         self.state = _state
         self.name = _state.get_string_board()
         self.moves = self.state.find_next_steps()
@@ -346,6 +355,7 @@ class Node:
         self.depth = _depth
         self.F = 0
         self.parent = None
+        self.freedom_level_change = 0
 
     def __lt__(self, other):
         return self.F < other.F

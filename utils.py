@@ -72,3 +72,14 @@ def decode_move(_e_move, _boardobj):
 
     new_move = vehicle_id + direction + str(steps)
     return new_move
+
+
+def get_different_index(_board1, _board2):
+    difference = []
+    for i in range(0, 36):
+        b1 = 1 if _board1[i] != "." else 0
+        b2 = 1 if _board2[i] != "." else 0
+        if b1 ^ b2:
+            difference.append(i)
+
+    return difference

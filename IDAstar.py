@@ -23,7 +23,7 @@ class IDAstar:
         self.Open = []
         self.Close = []
         self.bound = 0
-        self.BigOpen = []
+        # self.BigOpen = []
 
     def open_push(self, node):
         key = node.F
@@ -42,22 +42,26 @@ class IDAstar:
 
     def remove_node(self, l, value):
         for i in l:
-            if i.name == value:
+            if i[1].name == value:
                 l.remove(i)
                 return
+
+    # def extend_from_Big(self):
+    #     for node in self.BigOpen:
+    #         self.open_push(node)
 
     def searchB(self, _heuristic, _flag, _start_time, _DB):
         minn = math.inf
 
         while self.Open:
-            curr_node = self.Open.pop()
+            curr_node = self.open_pop()
             res = _DB.get_next(curr_node.state)
             if isinstance(res, str):
                 while True:
-                    self.Close.append(curr_node)
+                    self.close_push(curr_node)
                     self.Close_dic.update({curr_node.name: curr_node.F})
                     self.expand_from_DB(curr_node, _heuristic, res)
-                    curr_node = self.Open.pop()
+                    curr_node = self.open_pop()
                     res = _DB.get_next(curr_node.state)
                     if res == 1:
                         _flag = 1
@@ -79,26 +83,29 @@ class IDAstar:
                 return deeper_search_result
             if deeper_search_result < minn:
                 minn = deeper_search_result
-            self.Close.append(curr_node)
+                # print("mmin is " + str(minn))
+            self.close_push(curr_node)
             self.Close_dic.update({curr_node.name: curr_node.F})
 
         return minn
 
     def solve(self, max_time, _heuristic, _DB):
-        self.BigOpen = []
+        # self.BigOpen = []
         if _heuristic == 1:
             self.first_node.F = self.heuristic1(self.first_node.state)
         else:
             self.first_node.F = self.heuristic2(self.first_node.state)
 
         self.bound = self.first_node.F
-        self.BigOpen.append(self.first_node)
+        # self.BigOpen.append(self.first_node)
+
         count = 1
         start = time()
-        while time()- start < max_time:
-            print("iteration" + str(count))
+        while time() - start < max_time:
+            print("iteration" + str(count) + ",  with bound=" + str(self.bound))
             count += 1
-            self.Open.extend(self.BigOpen)
+            # self.extend_from_Big()
+            self.open_push(self.first_node)
             # upper_search_result = search(self.first_node, _heuristic, 0, start)
             upper_search_result = self.searchB(_heuristic, 0, start, _DB)
             if isinstance(upper_search_result, list):
@@ -106,10 +113,11 @@ class IDAstar:
             if upper_search_result == math.inf:
                 return None
             self.bound = upper_search_result
-            # self.Open_dic.clear()
+            self.Open_dic.clear()
             self.Close_dic.clear()
             self.Close = []
         return None
+
     def expand(self, node, _heuristic):
         moves = node.moves
         n = len(moves)
@@ -150,9 +158,9 @@ class IDAstar:
                     self.remove_node(self.Close, s)
                     self.Close_dic.pop(s)
 
-            self.BigOpen.append(next_node)
-            self.Open.append(next_node)
+            self.open_push(next_node)
             self.Open_dic.update({s: f})
+        # self.BigOpen.extend(self.Open)
 
         return True
 
@@ -179,7 +187,7 @@ class IDAstar:
             next_node.parent = node
             next_node.previous_move = s + _command
 
-            self.Open.append(next_node)
+            self.open_push(next_node)
             self.Open_dic.update({s: f})
 
         return True
@@ -290,7 +298,7 @@ class IDAstar:
         if _flag == 0:
             next_move = self.set_final_move(head)
         else:
-            mext_move = ""
+            next_move = ""
 
         while node.parent is not None:
             if _flag == 0:
