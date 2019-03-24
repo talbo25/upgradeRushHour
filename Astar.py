@@ -6,6 +6,7 @@ import math
 import copy
 from time import time
 from utils import *
+from BiA import BiAstar
 
 
 class Astar:
@@ -100,7 +101,6 @@ class Astar:
             # Expand node
             self.expand(curr_node, _heuristic)
 
-        end = time()
         if not self.Open:
             print("Open empty; solution not found")
 
@@ -108,7 +108,7 @@ class Astar:
 
         return result
 
-    def expand(self, node, _heuristic):
+    def expand(self, node, _heuristic, bi_flag=None, _dic=None):
         moves = node.moves
         n = len(moves)
         depth = node.depth
@@ -132,7 +132,11 @@ class Astar:
             else:
                 h = self.heuristic4(next_state)
 
+            if bi_flag == "close":
+                h = -h
+
             f = h + depth + 1
+
 
             # CASE 1 : new state is neither in OPEN nor in CLOSE
             if (s not in self.Open_dic) and (s not in self.Close_dic):
@@ -144,7 +148,8 @@ class Astar:
 
                 self.open_push(next_node)
                 self.Open_dic.update({s: f})
-
+                if bi_flag:
+                    _dic.update({s: next_node})
 
             # CASE 2: next_state in OPEN and our value is better
             elif s in self.Open_dic:
@@ -165,6 +170,8 @@ class Astar:
 
                     # update dic
                     self.Open_dic.update({s: f})
+                    if bi_flag:
+                        _dic.update({s: next_node})
 
 
             # CASE 3: next_state in CLOSE and our value is better
@@ -182,6 +189,8 @@ class Astar:
 
                     self.Open_dic.update({s: f})
                     self.Close_dic.pop(s)
+                    if bi_flag:
+                        _dic.update({s: next_node})
 
         return True
 
@@ -323,7 +332,7 @@ class Astar:
         if _flag == 0:
             next_move = self.set_final_move(head)
         else:
-            mext_move = ""
+            next_move = ""
 
         while node.parent is not None:
             if _flag == 0:

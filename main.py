@@ -2,6 +2,7 @@ from Play_tools import Vehicle, Board
 from State import State
 from Astar import Astar
 from IDAstar import IDAstar
+from BiA import BiAstar
 from DataBase import DataBase
 from time import time
 import hashlib
@@ -10,12 +11,12 @@ from heapq import heappush as push
 from heapq import heappop as pop
 
 
-def RUN(_time, _heuristic):
+def RUN(_time, _heuristic, option=1):
     total_time = 0
     count = 0
     total_steps = 0
     i = 1
-
+    fh2 = open("solutions.txt", "r")
     my_DBs = {}
     with open("puzzles.txt") as fh:
         puzzle = fh.readline()
@@ -25,10 +26,19 @@ def RUN(_time, _heuristic):
             if n not in my_DBs:
                 my_DBs[n] = DataBase()
 
-            IDAObj = IDAstar(p)
-            results = IDAObj.solve(_time, _heuristic, my_DBs[n])
-            # AObj = Astar(p)
-            # results = AObj.solve(_time, _heuristic, my_DBs[n])
+            if option == 1:
+                AObj = Astar(p)
+                results = AObj.solve(_time, _heuristic, my_DBs[n])
+            elif option == 2:
+                IDAObj = IDAstar(p)
+                results = IDAObj.solve(_time, _heuristic, my_DBs[n])
+            else:
+                Astart = Astar(p)
+                sol = fh2.readline()
+                p = Board(sol.rstrip('\n'))
+                Aend = Astar(p)
+                BiObj = BiAstar(Astart, Aend)
+                results = BiObj.solve(_time, _heuristic)
 
             if results is None:
                 print("-E- Could not solve puzzle number ", i, " due to time limit\n"
@@ -60,4 +70,4 @@ def RUN(_time, _heuristic):
            "Average steps for one puzzle - ", total_steps / count, "\n")
 
 
-RUN(200, 2)
+RUN(200, 2, 3)
