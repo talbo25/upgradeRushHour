@@ -52,8 +52,12 @@ class Astar:
 
         if _heuristic == 1:
             self.first_node.F = self.heuristic1(self.first_node.state)
-        else:
+        elif _heuristic == 2:
             self.first_node.F = self.heuristic2(self.first_node.state)
+        elif _heuristic == 3:
+            self.first_node.F = self.heuristic3(self.first_node.state)
+        else:
+            self.first_node.F = self.heuristic4(self.first_node.state)
 
         start = time()
         flag = 0
@@ -121,8 +125,12 @@ class Astar:
             s = next_state.get_string_board()
             if _heuristic == 1:
                 h = self.heuristic1(next_state)
-            else:
+            elif _heuristic == 2:
                 h = self.heuristic2(next_state)
+            elif _heuristic == 3:
+                h = self.heuristic3(next_state)
+            else:
+                h = self.heuristic4(next_state)
 
             f = h + depth + 1
 
@@ -189,8 +197,12 @@ class Astar:
 
         if _heuristic == 1:
             h = self.heuristic1(next_state)
-        else:
+        elif _heuristic == 2:
             h = self.heuristic2(next_state)
+        elif _heuristic == 3:
+            h = self.heuristic3(next_state)
+        else:
+            h = self.heuristic4(next_state)
 
         f = h + depth + 1
 
@@ -243,7 +255,7 @@ class Astar:
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
-                vehicle_len = blocking_vehicle.get_legth()
+                vehicle_len = blocking_vehicle.get_length()
                 if vehicle_len == 3:  # truck down
                     h += 5 - (blocking_vehicle.bottom_right / 6)
                 else:  # car up
@@ -260,7 +272,7 @@ class Astar:
             c = _state.get_string_board()[start_point + i]
             if c != '.':
                 blocking_vehicle = _state.get_board().get_vehicle(c)
-                vehicle_len = blocking_vehicle.get_legth()
+                vehicle_len = blocking_vehicle.get_length()
                 if vehicle_len == 3:  # truck down
                     h += 5 - (blocking_vehicle.bottom_right / 6)
                     for j in range(blocking_vehicle.bottom_right + 6, 36, 6):
