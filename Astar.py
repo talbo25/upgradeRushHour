@@ -92,6 +92,7 @@ class Astar:
                 end = time()
                 t = end - start
                 result = [self.printSolutionHeap(curr_node, DB, flag), curr_node.depth + 1, t]
+
                 return result
 
             # put node in CLOSED
@@ -361,6 +362,57 @@ class Astar:
 
         return "XR" + str(steps_to_end + 1)
 
+    def getEBF(self):
+        allNodes = self.Open + self.Close
+        ebf=0
+        n=len(allNodes)
+        for i in range (0,n):
+            ebf+=allNodes[i][1].BF
+
+        return ebf/n
+
+    def getDepthRatio(self):
+        treeNodes = self.Open
+        n = len(treeNodes)
+        max_depth = 0
+        N = n + len(self.Close)
+
+        for i in range(0, n):
+            d = treeNodes[i][1].depth
+            if (d > max_depth):
+                max_depth = d
+
+        return max_depth/N
+
+    def getHeuristicAverage(self):
+        allNodes = self.Open + self.Close
+        h = 0
+        n = len(allNodes)
+        for i in range(0, n):
+            h+=allNodes[i][1].F - allNodes[i][1].depth
+
+        return h/n
+
+    def getTreeDepth(self):
+        treeNodes = self.Open
+        n = len(treeNodes)
+        min=math.inf
+        max=0
+        avg=0
+
+        for i in range(0, n):
+            d = treeNodes[i][1].depth
+            if (d<min):
+                min=d
+            if (d>max):
+                max=d
+            avg+=d
+
+        avg=avg/n
+        return [min, avg, max]
+
+    def countNodes(self):
+        return len(self.Open)+len(self.Close)
 
 
 class Node:

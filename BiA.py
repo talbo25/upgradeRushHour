@@ -104,7 +104,7 @@ class BiAstar:
 
         return False
 
-    def solve(self, max_time, _heuristic):
+    def solve(self, max_time, _heuristic, printStats=False):
         self.initiate_first_node(_heuristic)
 
         start = time()
@@ -119,6 +119,14 @@ class BiAstar:
                 end = time()
                 t = end - start
                 result = [self.printSolutionHeap(flag, s_curr_node, e_curr_node), self.final_steps, t]
+                if (printStats):
+                    ebf=self.startObj.getEBF() + self.endObj.getEBF()
+                    depth_ratio = self.startObj.getDepthRatio() + self.endObj.getDepthRatio()
+                    H_avg = self.startObj.getHeuristicAverage() + self.endObj.getHeuristicAverage()
+                    tree_depth = self.startObj.getTreeDepth() + self.endObj.getTreeDepth()
+                    N = self.startObj.countNodes() + self.endObj.countNodes()
+                    result = [ebf, depth_ratio, H_avg, tree_depth, N, t]
+
                 return result
 
             # put node in CLOSED
