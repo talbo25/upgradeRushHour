@@ -15,7 +15,7 @@ class BiAstar:
         self.endObj = _end
         self.start_nodes = dict()
         self.end_nodes = dict()
-        self.final_steps= 0
+        self.final_steps = 0
 
         self.update_start_dict(self.startObj.first_node)
         self.update_end_dict(self.endObj.first_node)
@@ -120,9 +120,9 @@ class BiAstar:
                 t = end - start
                 result = [self.printSolutionHeap(flag, s_curr_node, e_curr_node), self.final_steps, t]
                 if (printStats):
-                    ebf=self.startObj.getEBF() + self.endObj.getEBF()
-                    depth_ratio = self.startObj.getDepthRatio() + self.endObj.getDepthRatio()
-                    H_avg = self.startObj.getHeuristicAverage() + self.endObj.getHeuristicAverage()
+                    ebf = self.getEBF()
+                    depth_ratio = self.getDepthRatio()
+                    H_avg = (self.startObj.getHeuristicAverage() - self.endObj.getHeuristicAverage()) / 2
                     tree_depth = self.startObj.getTreeDepth() + self.endObj.getTreeDepth()
                     N = self.startObj.countNodes() + self.endObj.countNodes()
                     result = [ebf, depth_ratio, H_avg, tree_depth, N, t]
@@ -156,3 +156,39 @@ class BiAstar:
         result = None
 
         return result
+
+    def getDepthRatio(self):
+        treeNodes = self.startObj.Open
+        n = len(treeNodes)
+        max_depth_s = 0
+        N_s = n + len(self.startObj.Close)
+        for i in range(0, n):
+            d = treeNodes[i][1].depth
+            if (d > max_depth_s):
+                max_depth_s = d
+
+        treeNodes = self.endObj.Open
+        n = len(treeNodes)
+        max_depth_e = 0
+        N_e = n + len(self.endObj.Close)
+        for i in range(0, n):
+            d = treeNodes[i][1].depth
+            if (d > max_depth_e):
+                max_depth_e = d
+
+        return (max_depth_s + max_depth_e) / (N_s + N_e)
+
+    def getEBF(self):
+        allNodes = self.startObj.Open + self.startObj.Close
+        ebf_s = 0
+        ns = len(allNodes)
+        for i in range(0, ns):
+            ebf_s += allNodes[i][1].BF
+
+        allNodes = self.endObj.Open + self.endObj.Close
+        ebf_e = 0
+        ne = len(allNodes)
+        for i in range(0, ne):
+            ebf_e += allNodes[i][1].BF
+
+        return (ebf_s + ebf_e) / (ns + ne)
